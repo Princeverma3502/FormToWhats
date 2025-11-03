@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Container, AppBar, Toolbar, Typography, Box, Paper, Button, Switch, FormControlLabel, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://formtowhats-backend.onrender.com';
+
 export default function Dashboard(){
   const [members, setMembers] = useState([]);
   const [auto, setAuto] = useState(true);
