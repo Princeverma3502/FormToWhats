@@ -3,26 +3,69 @@ import axios from 'axios';
 import { Container, AppBar, Toolbar, Typography, Box, Paper, Button, Switch, FormControlLabel, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://formtowhats-backend.onrender.com';
+import CloudIcon from '@mui/icons-material/Cloud';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+
 
 export default function Dashboard(){
   const [members, setMembers] = useState([]);
   const [auto, setAuto] = useState(true);
   const [status, setStatus] = useState('');
+  const [backendStatus, setBackendStatus] = useState('checking');
+
   async function loadMembers(){
     try{ const res = await axios.get(`${BACKEND}/api/members`); setMembers(res.data); setStatus('Loaded'); }
     catch(e){ setStatus('Error loading'); }
   }
-  useEffect(()=>{ loadMembers(); const id = setInterval(()=>{ if(auto) loadMembers(); }, 15000); return ()=>clearInterval(id); },[auto]);
+  async function checkBackend() {
+    try {
+      const res = await axios.get(`${BACKEND}/health`);
+      if (res.status === 200) setBackendStatus('online');
+      else setBackendStatus('offline');
+    } catch (e) {
+      setBackendStatus('offline');
+    }
+  }
+
+  useEffect(()=>{ loadMembers();
+    checkBackend();
+    const id = setInterval(()=>{ if(auto) loadMembers(); }, 15000); return ()=>clearInterval(id); },[auto]);
   async function start(){ try{ await axios.post(`${BACKEND}/api/start`, { spreadsheetId: import.meta.env.VITE_GOOGLE_SHEET_ID || undefined }); setStatus('Started'); }catch(e){ setStatus('Start error'); }}
   return (
     <Container maxWidth='lg' sx={{mt:4}}>
       <AppBar position="static">
         <Toolbar>
-          <img src="/logo.svg" alt="logo" style={{width:40, marginRight:12}}/>
-          <Typography variant="h6" component="div" sx={{flexGrow:1}}>FormToWhats — Admin</Typography>
-          <Button color="inherit" onClick={loadMembers} startIcon={<RefreshIcon/>}>Refresh</Button>
+          <img src="/logo.svg" alt="logo" style={{ width: 40, marginRight: 12 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            FormToWhats — Admin
+          </Typography>
+
+          {/* ✅ Backend Status Indicator */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+            {backendStatus === 'online' ? (
+              <>
+                <CloudIcon sx={{ color: 'lightgreen', mr: 1 }} />
+                <Typography variant="body2">Backend Online</Typography>
+              </>
+            ) : backendStatus === 'checking' ? (
+              <>
+                <CloudIcon sx={{ color: 'orange', mr: 1 }} />
+                <Typography variant="body2">Checking...</Typography>
+              </>
+            ) : (
+              <>
+                <CloudOffIcon sx={{ color: 'red', mr: 1 }} />
+                <Typography variant="body2">Offline</Typography>
+              </>
+            )}
+          </Box>
+
+          <Button color="inherit" onClick={loadMembers} startIcon={<RefreshIcon />}>
+            Refresh
+          </Button>
         </Toolbar>
       </AppBar>
+
       <Box sx={{my:3, display:'flex', gap:2}}>
         <Paper sx={{p:2, flex:1}}><Typography variant="h6">Controls</Typography>
           <Box sx={{mt:2}}>
@@ -33,7 +76,6 @@ export default function Dashboard(){
         </Paper>
         <Paper sx={{p:2, width:420}}>
           <Typography variant="h6">Quick Info</Typography>
-          <Typography variant="body2" sx={{mt:1}}>Backend: {BACKEND}</Typography>
           <Typography variant="body2">Invite link: {import.meta.env.VITE_DEFAULT_GROUP_INVITE_LINK || 'not set'}</Typography>
         </Paper>
       </Box>

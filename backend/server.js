@@ -18,6 +18,10 @@ if (process.env.MONGO_URI) {
 
 app.use('/api/google', googleRoutes);
 app.use('/api', apiRoutes);
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', time: new Date() });
+});
+
 
 initWhatsApp().catch(err=>console.error('WhatsApp init error', err));
 
